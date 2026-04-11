@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { usePathname } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -17,13 +18,18 @@ export default function LayoutWrapper({ children }) {
     return (
         <GoogleOAuthProvider clientId={googleClientId}>
             <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-                {!isPlayerPage && <Navbar />}
+                {!isPlayerPage && (
+                    <Suspense fallback={<div style={{ height: '80px' }} />}>
+                        <Navbar />
+                    </Suspense>
+                )}
                 <main style={{ flex: 1, paddingTop: !isPlayerPage ? '80px' : '0' }}>
-                    {children}
+                    <Suspense fallback={null}>
+                        {children}
+                    </Suspense>
                 </main>
                 {!isPlayerPage && <Footer />}
             </div>
         </GoogleOAuthProvider>
-
     );
 }
