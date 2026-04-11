@@ -80,6 +80,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
             router.push('/dashboard');
         } catch (err) {
             console.error('Google Auth error:', err);
+            if (err.response?.data?.details) {
+                console.error('SERVER TRACEBACK:', err.response.data.details);
+            }
             let msg = err.response?.data?.error || 'Google sign-in failed. Please try again.';
             if (typeof msg === 'object') msg = JSON.stringify(msg);
             setError(msg);
