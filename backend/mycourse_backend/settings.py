@@ -98,9 +98,10 @@ WSGI_APPLICATION = 'mycourse_backend.wsgi.application'
 # Database
 # Use PostgreSQL for production (on Render/Railway) and SQLite locally
 if dj_database_url and os.getenv('DATABASE_URL'):
+    # Optimize for Serverless (Disable pooling)
     DATABASES = {
         'default': dj_database_url.config(
-            conn_max_age=600,
+            conn_max_age=0,
             ssl_require=True
         )
     }

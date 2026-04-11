@@ -5,7 +5,13 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
+from django.http import JsonResponse
+
+def health_check(request):
+    return JsonResponse({'status': 'ok', 'message': 'QlasRoom Backend is alive!'})
+
 urlpatterns = [
+    path('health/', health_check),
     path('admin/', admin.site.urls),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
