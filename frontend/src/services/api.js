@@ -1,6 +1,17 @@
 import axios from 'axios';
 
-let API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+let API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+// Auto-detect production environment if URL is missing
+if (!API_BASE_URL) {
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        // Use relative path for Vercel Services configuration
+        API_BASE_URL = '/_/backend/api';
+    } else {
+        // Fallback for local development
+        API_BASE_URL = 'http://localhost:8000/api';
+    }
+}
 
 // Protocol Guard: Ensure HTTPS in production to avoid Mixed Content errors
 if (typeof window !== 'undefined' && window.location.protocol === 'https:' && API_BASE_URL.startsWith('http://')) {
