@@ -531,10 +531,19 @@ function Dashboard() {
                                 />
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-                                            <h4 style={{ fontSize: '1.2rem', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            <h4 style={{ 
+                                                fontSize: '1.1rem', 
+                                                margin: 0, 
+                                                display: '-webkit-box',
+                                                WebkitLineClamp: 2,
+                                                WebkitBoxOrient: 'vertical',
+                                                overflow: 'hidden',
+                                                lineHeight: '1.4',
+                                                fontWeight: 600
+                                            }}>
                                                 {course.title}
                                             </h4>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-dim)', fontSize: '0.8rem', background: 'rgba(255,255,255,0.05)', padding: '0.2rem 0.6rem', borderRadius: '20px', flexShrink: 0 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-dim)', fontSize: '0.75rem', background: 'rgba(255,255,255,0.05)', padding: '0.2rem 0.6rem', borderRadius: '20px', flexShrink: 0 }}>
                                                 <Clock size={12} /> {formatDuration(course.total_duration)}
                                             </div>
                                         </div>
@@ -718,7 +727,7 @@ function Dashboard() {
                     ).length > 0 ? (
                         <div style={{ 
                             display: 'grid', 
-                            gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', 
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(450px, 1fr))', 
                             gap: '2rem' 
                         }}>
                             {allCourses
@@ -752,11 +761,20 @@ function Dashboard() {
                                             }} 
                                         />
                                         <div style={{ flex: 1, minWidth: 0 }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-                                                <h4 style={{ fontSize: '1.2rem', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem', gap: '1rem' }}>
+                                                <h4 style={{ 
+                                                    fontSize: '1.1rem', 
+                                                    margin: 0, 
+                                                    display: '-webkit-box',
+                                                    WebkitLineClamp: 2,
+                                                    WebkitBoxOrient: 'vertical',
+                                                    overflow: 'hidden',
+                                                    lineHeight: '1.4',
+                                                    fontWeight: 600
+                                                }}>
                                                     {course.title}
                                                 </h4>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-dim)', fontSize: '0.8rem', background: 'rgba(255,255,255,0.05)', padding: '0.2rem 0.6rem', borderRadius: '20px', flexShrink: 0 }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-dim)', fontSize: '0.75rem', background: 'rgba(255,255,255,0.05)', padding: '0.2rem 0.6rem', borderRadius: '20px', flexShrink: 0 }}>
                                                     <Clock size={12} /> {formatDuration(course.total_duration)}
                                                 </div>
                                             </div>
