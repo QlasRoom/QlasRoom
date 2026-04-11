@@ -22,6 +22,7 @@ if (typeof window !== 'undefined' && window.location.protocol === 'https:' && AP
 
 const api = axios.create({
     baseURL: API_BASE_URL,
+    timeout: 15000, // 15 second timeout for slow production endpoints
 });
 
 api.interceptors.request.use((config) => {
