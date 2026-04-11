@@ -1,0 +1,13 @@
+{
+  "name": "mycourse-monorepo",
+  "version": "1.0.0",
+  "description": "Monorepo for MyCourse LMS",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install --prefix frontend && pip install -r backend/requirements.txt",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "cd backend && python manage.py runserver",
+    "build:frontend": "npm run build --prefix frontend",
+    "lint:frontend": "npm run lint --prefix frontend"
+  }
+}

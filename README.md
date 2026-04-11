@@ -62,11 +62,32 @@ npm run dev
 
 ## 🌐 Deployment
 
-The project is pre-configured for deployment on **Render** (Backend) and **Vercel** (Frontend).
+The project is pre-configured for seamless deployment.
 
-1. **Backend**: Uses `build.sh` and `Procfile` for one-click deployment on Render.
-2. **Database**: Recommended use of **Neon.tech** for a managed PostgreSQL instance.
-3. **Frontend**: Simply connect your GitHub repository to Vercel and set your environment variables.
+### 1. Frontend (Vercel)
+The frontend is optimized for [Vercel](https://vercel.com). The directory contains a root `vercel.json` and `package.json` to handle the monorepo structure automatically.
+
+**Steps:**
+1. Connect your GitHub repository to Vercel.
+2. Vercel will automatically detect the configuration.
+3. **Environment Variables**: Add the following in the Vercel dashboard:
+   - `NEXT_PUBLIC_GOOGLE_CLIENT_ID`: Your Google OAuth Client ID.
+   - `NEXT_PUBLIC_API_URL`: Your deployed Backend URL (e.g., `https://mycourse-backend.onrender.com/api`).
+
+### 2. Backend (Render)
+The backend is ready for [Render](https://render.com).
+
+**Steps:**
+1. Create a new **Web Service** on Render.
+2. Connect your GitHub repository.
+3. Set the **Root Directory** to `backend`.
+4. Render will use the `build.sh` script and `Procfile` provided.
+5. **Environment Variables**:
+   - `SECRET_KEY`: A secure random string.
+   - `DEBUG`: `False`.
+   - `DATABASE_URL`: Your PostgreSQL connection string (Neon.tech recommended).
+   - `ALLOWED_HOSTS`: Your Render domain and Vercel frontend domain.
+   - `CORS_ALLOWED_ORIGINS`: Your Vercel frontend URL.
 
 ---
 
