@@ -281,19 +281,20 @@ class GoogleLoginView(APIView):
             })
 
         except Exception as e:
-            import traceback
-            error_details = traceback.format_exc()
-            print(f"CRITICAL DEBUG: {error_details}")
+            error_details = str(e)
+            print(f"DEBUG: Google Login Exception: {type(e).__name__}: {error_details}")
             
-            # Extract short message for UI
-            short_msg = str(e)
-            if "relation" in short_msg.lower() or "table" in short_msg.lower():
-                short_msg = "Database Error: Migrations may not have been run."
-            
-            return Response({
-                'error': f"Google Login Failed: {short_msg}",
-                'details': error_details
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            # Specific handling for database connectivity / unrun migrations
+            if "relation" in error_details.lower() or "table" in error_details.lower():
+                msg = "Database Error: It looks like migrations haven't been run on production yet."
+            elif "audience" in error_details.lower():
+                msg = "Google Client ID mismatch. Please check your .env settings."
+            elif "expired" in error_details.lower():
+                msg = "Google token has expired. Please sign in again."
+            else:
+                msg = f"Google verification failed: {error_details}"
+                
+            return Response({'error': msg}, status=status.HTTP_400_BAD_REQUEST)
 
 class VerifyEmailView(APIView):
     permission_classes = (permissions.AllowAny,)
