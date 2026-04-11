@@ -282,7 +282,6 @@ class GoogleLoginView(APIView):
 
         except Exception as e:
             error_details = str(e)
-            print(f"DEBUG: Google Login Exception: {type(e).__name__}: {error_details}")
             
             # Specific handling for database connectivity / unrun migrations
             if "relation" in error_details.lower() or "table" in error_details.lower():

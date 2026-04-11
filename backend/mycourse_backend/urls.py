@@ -5,8 +5,7 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
-from django.http import JsonResponse, HttpResponse
-from django.core.management import call_command
+from django.http import JsonResponse
 
 def health_check(request):
     return JsonResponse({'status': 'ok', 'message': 'QlasRoom Backend is alive!'})

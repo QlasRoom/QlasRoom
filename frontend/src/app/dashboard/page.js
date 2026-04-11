@@ -120,45 +120,11 @@ function Dashboard() {
             const serverCheckIns = checkRes ? checkRes.data.map(c => c.date) : [];
             const serverGoals = goalsRes ? goalsRes.data : [];
 
-            // Legacy Sync Logic (Push localStorage to backend if exists)
-            const localCheckIns = JSON.parse(localStorage.getItem('qlasroom_checkins') || '[]');
-            const localTodos = JSON.parse(localStorage.getItem('qlasroom_todos') || '[]');
+            const serverCheckIns = checkRes ? checkRes.data.map(c => c.date) : [];
+            const serverGoals = goalsRes ? goalsRes.data : [];
 
-            let finalCheckIns = [...serverCheckIns];
-            let finalGoals = [...serverGoals];
-
-            if (localCheckIns.length > 0 || localTodos.length > 0) {
-                setIsSyncing(true);
-                // Sync Checkins
-                for (const date of localCheckIns) {
-                    if (!serverCheckIns.includes(date)) {
-                        try {
-                            const res = await api.post('/daily-checkins/', { date });
-                            finalCheckIns.push(res.data.date);
-                        } catch (e) {}
-                    }
-                }
-                // Sync Todos
-                for (const todo of localTodos) {
-                    if (!serverGoals.some(g => g.text === todo.text && g.date === todo.date)) {
-                        try {
-                            const res = await api.post('/goals/', {
-                                text: todo.text,
-                                completed: todo.completed,
-                                date: todo.date
-                            });
-                            finalGoals.push(res.data);
-                        } catch (e) {}
-                    }
-                }
-                // Clear legacy storage
-                localStorage.removeItem('qlasroom_checkins');
-                localStorage.removeItem('qlasroom_todos');
-                setIsSyncing(false);
-            }
-
-            setCheckIns(finalCheckIns);
-            setTodos(finalGoals);
+            setCheckIns(serverCheckIns);
+            setTodos(serverGoals);
 
             // Auto-checkin is now handled on the backend via the /me/ profile fetch
         } catch (err) {

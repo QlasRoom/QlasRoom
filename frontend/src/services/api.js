@@ -42,7 +42,6 @@ api.interceptors.response.use((response) => {
     
     // Handle Network Errors (like backend down)
     if (!error.response) {
-        console.error("Network Error: Backend might be down.", error.message);
         return Promise.reject(error);
     }
 
@@ -53,7 +52,6 @@ api.interceptors.response.use((response) => {
         
         if (refreshToken) {
             try {
-                console.log("Access token expired, attempting refresh...");
                 const response = await axios.post(`${API_BASE_URL}/token/refresh/`, {
                     refresh: refreshToken,
                 });
