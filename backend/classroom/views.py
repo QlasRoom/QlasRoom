@@ -282,9 +282,12 @@ class GoogleLoginView(APIView):
 
         except Exception as e:
             error_details = str(e)
-            print(f"Google Login Error: {error_details}")
-            # Identify common Google Auth errors
-            if "audience" in error_details.lower():
+            print(f"DEBUG: Google Login Exception: {type(e).__name__}: {error_details}")
+            
+            # Specific handling for database connectivity / unrun migrations
+            if "relation" in error_details.lower() or "table" in error_details.lower():
+                msg = "Database Error: It looks like migrations haven't been run on production yet."
+            elif "audience" in error_details.lower():
                 msg = "Google Client ID mismatch. Please check your .env settings."
             elif "expired" in error_details.lower():
                 msg = "Google token has expired. Please sign in again."

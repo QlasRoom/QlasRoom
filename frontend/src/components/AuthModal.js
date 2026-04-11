@@ -56,9 +56,10 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
             }
         } catch (err) {
             console.error('Auth error:', err);
-            const msg = err.response?.data?.error || 
+            let msg = err.response?.data?.error || 
                         Object.values(err.response?.data || {}).flat()[0] || 
                         'Authentication failed. Please try again.';
+            if (typeof msg === 'object') msg = JSON.stringify(msg);
             setError(msg);
         } finally {
             setLoading(false);
@@ -79,7 +80,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
             router.push('/dashboard');
         } catch (err) {
             console.error('Google Auth error:', err);
-            setError(err.response?.data?.error || 'Google sign-in failed. Please try again.');
+            let msg = err.response?.data?.error || 'Google sign-in failed. Please try again.';
+            if (typeof msg === 'object') msg = JSON.stringify(msg);
+            setError(msg);
         } finally {
             setLoading(false);
         }

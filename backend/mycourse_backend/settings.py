@@ -33,10 +33,10 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-bi3z2=jsh8+$gahxm3b)1ga$#n
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
-# Add default vercel/localhost if empty
-if not ALLOWED_HOSTS or ALLOWED_HOSTS == ['']:
-    ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.vercel.app']
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
+# Add default hosts
+if '*' not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.extend(['localhost', '127.0.0.1', '.vercel.app'])
 
 
 # Application definition
