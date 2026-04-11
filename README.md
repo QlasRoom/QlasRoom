@@ -74,20 +74,26 @@ The frontend is optimized for [Vercel](https://vercel.com). The directory contai
    - `NEXT_PUBLIC_GOOGLE_CLIENT_ID`: Your Google OAuth Client ID.
    - `NEXT_PUBLIC_API_URL`: Your deployed Backend URL (e.g., `https://mycourse-backend.onrender.com/api`).
 
-### 2. Backend (Render)
-The backend is ready for [Render](https://render.com).
+### 2. Backend (Vercel)
+The backend is optimized for [Vercel](https://vercel.com) using `@vercel/python`. This allows for completely free hosting without a credit card.
 
 **Steps:**
-1. Create a new **Web Service** on Render.
-2. Connect your GitHub repository.
-3. Set the **Root Directory** to `backend`.
-4. Render will use the `build.sh` script and `Procfile` provided.
+1. Create a **New Project** on Vercel.
+2. Select the same repository.
+3. **Root Directory**: Set this to `backend`.
+4. Vercel will automatically use `vercel.json` and `vercel_app.py`.
 5. **Environment Variables**:
    - `SECRET_KEY`: A secure random string.
    - `DEBUG`: `False`.
-   - `DATABASE_URL`: Your PostgreSQL connection string (Neon.tech recommended).
-   - `ALLOWED_HOSTS`: Your Render domain and Vercel frontend domain.
+   - `DATABASE_URL`: Your **Neon.tech** PostgreSQL URL.
+   - `ALLOWED_HOSTS`: `.vercel.app`.
    - `CORS_ALLOWED_ORIGINS`: Your Vercel frontend URL.
+
+### 3. Database (Neon.tech)
+Highly recommended for a free, "no-card" managed PostgreSQL database.
+1. Create a free account on [Neon.tech](https://neon.tech).
+2. Create a new project and copy the **Connection String**.
+3. Use this string as your `DATABASE_URL` in Vercel.
 
 ---
 
