@@ -1,6 +1,13 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+let API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+
+// Protocol Guard: Ensure HTTPS in production to avoid Mixed Content errors
+if (typeof window !== 'undefined' && window.location.protocol === 'https:' && API_BASE_URL.startsWith('http://')) {
+    if (!API_BASE_URL.includes('localhost') && !API_BASE_URL.includes('127.0.0.1')) {
+        API_BASE_URL = API_BASE_URL.replace('http://', 'https://');
+    }
+}
 
 const api = axios.create({
     baseURL: API_BASE_URL,
