@@ -9,5 +9,6 @@
             "entrypoint": "backend",
             "routePrefix": "/_/backend"
         }
-    }
+    },
+    "regions": ["sin1"]
 }
