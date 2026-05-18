@@ -14,6 +14,7 @@ export default function Navbar({ onAddCourse }) {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [authMode, setAuthMode] = useState('login');
+    const [isMobile, setIsMobile] = useState(false);
     const router = useRouter();
     const profileRef = useRef(null);
     const pathname = usePathname();
@@ -36,6 +37,12 @@ export default function Navbar({ onAddCourse }) {
     };
 
     useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.matchMedia('(max-width: 768px)').matches);
+        };
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+
         // Run checkAuth inside a microtask to avoid synchronous setState calls during render
         Promise.resolve().then(checkAuth);
         // Listen for storage changes (for logout in other tabs)
@@ -66,6 +73,7 @@ export default function Navbar({ onAddCourse }) {
         document.addEventListener('mousedown', handleClickOutside);
 
         return () => {
+            window.removeEventListener('resize', checkMobile);
             window.removeEventListener('storage', checkAuth);
             window.removeEventListener('auth-change', checkAuth);
             document.removeEventListener('mousedown', handleClickOutside);
@@ -90,7 +98,7 @@ export default function Navbar({ onAddCourse }) {
     return (
         <>
         <nav style={{ 
-            padding: '1rem 5%', 
+            padding: isMobile ? '1rem 1.2rem' : '1rem 5%', 
             display: 'flex', 
             justifyContent: 'space-between', 
             alignItems: 'center',
@@ -104,7 +112,7 @@ export default function Navbar({ onAddCourse }) {
             borderBottom: '1px solid rgba(255,255,255,0.05)',
             height: '80px'
         }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '3rem', height: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '1.5rem' : '3rem', height: '100%' }}>
                 <div 
                     onClick={() => router.push(isLoggedIn ? '/dashboard' : '/')}
                     className="logo gradient-text" 
@@ -113,8 +121,8 @@ export default function Navbar({ onAddCourse }) {
                     QlasRoom
                 </div>
 
-                {/* Dashboard Tabs in Header */}
-                {isLoggedIn && pathname === '/dashboard' && (
+                {/* Dashboard Tabs in Header - Desktop only */}
+                {isLoggedIn && pathname === '/dashboard' && !isMobile && (
                     <div style={{ display: 'flex', gap: '1.5rem', alignSelf: 'stretch', alignItems: 'flex-end', paddingBottom: '2px' }}>
                         <button 
                             onClick={() => router.push('/dashboard?tab=learning')}
@@ -189,20 +197,20 @@ export default function Navbar({ onAddCourse }) {
                 )}
             </div>
 
-            <div style={{ display: 'flex', gap: '1.2rem', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: isMobile ? '0.6rem' : '1.2rem', alignItems: 'center' }}>
                 {!isLoggedIn ? (
                     <>
                         <button 
                             onClick={() => { setAuthMode('login'); setIsAuthModalOpen(true); }}
                             className="btn-primary" 
-                            style={{ width: 'auto', height: '40px', padding: '0 1.8rem', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            style={{ width: 'auto', height: '40px', padding: isMobile ? '0 1rem' : '0 1.8rem', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? '0.85rem' : '1rem' }}
                         >
                             Login
                         </button>
                         <button 
                             onClick={() => { setAuthMode('signup'); setIsAuthModalOpen(true); }}
                             className="btn-primary" 
-                            style={{ width: 'auto', height: '40px', padding: '0 1.8rem', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            style={{ width: 'auto', height: '40px', padding: isMobile ? '0 1rem' : '0 1.8rem', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? '0.85rem' : '1rem' }}
                         >
                             Sign Up
                         </button>
@@ -210,8 +218,8 @@ export default function Navbar({ onAddCourse }) {
                 ) : (
                     <>
                         {pathname === '/' && (
-                            <Link href="/dashboard" className="btn-primary" style={{ width: 'auto', height: '40px', padding: '0 1.8rem', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                Go to Dashboard
+                            <Link href="/dashboard" className="btn-primary" style={{ width: 'auto', height: '40px', padding: isMobile ? '0 1rem' : '0 1.8rem', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? '0.85rem' : '1rem' }}>
+                                {isMobile ? 'Dashboard' : 'Go to Dashboard'}
                             </Link>
                         )}
                         
@@ -219,13 +227,13 @@ export default function Navbar({ onAddCourse }) {
                         {(pathname === '/dashboard' || onAddCourse) && (
                             <button 
                                 className="btn-primary" 
-                                style={{ width: 'auto', height: '40px', padding: '0 1.2rem', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                                style={{ width: 'auto', height: '40px', padding: isMobile ? '0 0.8rem' : '0 1.2rem', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontSize: isMobile ? '0.85rem' : '1rem' }}
                                 onClick={() => {
                                     if (onAddCourse) onAddCourse();
                                     else window.dispatchEvent(new CustomEvent('open-import-modal'));
                                 }}
                             >
-                                <Plus size={18} /> Add Course
+                                <Plus size={18} /> {!isMobile && 'Add Course'}
                             </button>
                         )}
 
@@ -310,6 +318,84 @@ export default function Navbar({ onAddCourse }) {
                 )}
             </div>
         </nav>
+
+        {/* Mobile Bottom Navigation Bar */}
+        {isLoggedIn && pathname === '/dashboard' && isMobile && (
+            <div style={{
+                position: 'fixed',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: '65px',
+                background: 'rgba(10, 10, 10, 0.85)',
+                backdropFilter: 'blur(30px) saturate(200%)',
+                WebkitBackdropFilter: 'blur(30px) saturate(200%)',
+                borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                display: 'flex',
+                justifyContent: 'space-around',
+                alignItems: 'center',
+                zIndex: 1000,
+                paddingBottom: 'safe-area-inset-bottom',
+            }}>
+                <button 
+                    onClick={() => router.push('/dashboard?tab=learning')}
+                    style={{ 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        alignItems: 'center', 
+                        gap: '0.2rem',
+                        color: (searchParams.get('tab') || 'learning') === 'learning' ? 'var(--primary-color)' : 'var(--text-dim)',
+                        background: 'none',
+                        border: 'none',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        flex: 1
+                    }}
+                >
+                    <GraduationCap size={20} />
+                    Learning
+                </button>
+                <button 
+                    onClick={() => router.push('/dashboard?tab=archived')}
+                    style={{ 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        alignItems: 'center', 
+                        gap: '0.2rem',
+                        color: searchParams.get('tab') === 'archived' ? 'var(--primary-color)' : 'var(--text-dim)',
+                        background: 'none',
+                        border: 'none',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        flex: 1
+                    }}
+                >
+                    <Archive size={20} />
+                    Archived
+                </button>
+                <button 
+                    onClick={() => router.push('/dashboard?tab=manage')}
+                    style={{ 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        alignItems: 'center', 
+                        gap: '0.2rem',
+                        color: searchParams.get('tab') === 'manage' ? 'var(--primary-color)' : 'var(--text-dim)',
+                        background: 'none',
+                        border: 'none',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        flex: 1
+                    }}
+                >
+                    <Sliders size={20} />
+                    Manage
+                </button>
+            </div>
+        )}
 
         <AuthModal 
             isOpen={isAuthModalOpen} 

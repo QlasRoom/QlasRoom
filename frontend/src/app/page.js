@@ -19,14 +19,14 @@ export default function LandingPage() {
             <div className="landing-bg"></div>
 
             {/* Features Section - Main Entry */}
-            <section style={{ padding: '6rem 5% 8rem' }}>
+            <section className="landing-hero-section">
                 <div style={{ textAlign: 'center', marginBottom: '8rem' }}>
-                    <h1 className="gradient-text" style={{ fontSize: '3.2rem', fontWeight: 800, maxWidth: '900px', margin: '0 auto', letterSpacing: '-1.5px', lineHeight: 1.2 }}>
+                    <h1 className="gradient-text landing-hero-title">
                         Queue the Learning, <br /> Cut the Noise.
                     </h1>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2.5rem', maxWidth: '1400px', margin: '0 auto' }}>
+                <div className="landing-features-grid">
                     {[
                         { title: 'The Heartbeat', desc: 'Auto-syncs your progress every 10 seconds. Close the tab, pick up right where you left off.', icon: <Activity size={28} /> },
                         { title: 'Zero Distractions', desc: 'Focus strictly on your course materials without YouTube recommendations or comments.', icon: <Target size={28} /> },
@@ -54,11 +54,11 @@ export default function LandingPage() {
 
 
             {/* Final CTA */}
-            <section style={{ padding: '12rem 5% 0rem', textAlign: 'center', marginBottom: '8rem' }}>
+            <section className="landing-cta-section">
                 <div style={{ position: 'relative', display: 'inline-block' }}>
                     <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '300px', height: '300px', background: 'var(--primary-gradient)', filter: 'blur(150px)', opacity: 0.1, zIndex: 0 }}></div>
                     <div style={{ position: 'relative', zIndex: 1 }}>
-                        <h2 style={{ fontSize: '3.5rem', fontWeight: 800, marginBottom: '2rem', letterSpacing: '-1px' }}>Ready to start your journey?</h2>
+                        <h2 className="landing-cta-title">Ready to start your journey?</h2>
                         <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center' }}>
                             <p style={{ color: 'var(--text-dim)', fontSize: '1.2rem' }}>Experience the distraction-free university today. Sign up at the top to begin.</p>
                         </div>

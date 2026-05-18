@@ -22,9 +22,19 @@ export default function CoursePlayer() {
     const [loading, setLoading] = useState(true);
     const [apiReady, setApiReady] = useState(false);
     const [error, setError] = useState('');
+    const [isMobile, setIsMobile] = useState(false);
     const playerRef = useRef(null);
     const heartbeatInterval = useRef(null);
     const router = useRouter();
+
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.matchMedia('(max-width: 768px)').matches);
+        };
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     useEffect(() => {
         const token = localStorage.getItem('access_token');
@@ -181,20 +191,29 @@ export default function CoursePlayer() {
     if (error) return <div className="auth-container"><p style={{ color: 'var(--danger-color)' }}>{error}</p></div>;
 
     return (
-        <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#000' }}>
+        <div style={{ 
+            display: 'flex', 
+            flexDirection: isMobile ? 'column-reverse' : 'row', 
+            height: isMobile ? 'auto' : '100vh', 
+            overflow: isMobile ? 'visible' : 'hidden', 
+            background: '#000' 
+        }}>
             {/* Sidebar - Course Syllabus */}
             <div style={{ 
-                width: '350px', 
+                width: isMobile ? '100%' : '350px', 
                 background: 'var(--surface-color)', 
-                borderRight: '1px solid var(--border-color)', 
+                borderRight: isMobile ? 'none' : '1px solid var(--border-color)', 
+                borderTop: isMobile ? '1px solid var(--border-color)' : 'none',
                 display: 'flex', 
                 flexDirection: 'column',
-                zIndex: 10
+                zIndex: 10,
+                height: 'auto',
+                minHeight: isMobile ? '400px' : 'none'
             }}>
-                <div style={{ padding: '2rem', borderBottom: '1px solid var(--border-color)' }}>
+                <div style={{ padding: isMobile ? '1.5rem 1.2rem' : '2rem', borderBottom: '1px solid var(--border-color)' }}>
                     <button 
                         onClick={() => router.push('/dashboard')} 
-                        style={{ color: 'var(--text-dim)', marginBottom: '1rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                        style={{ color: 'var(--text-dim)', marginBottom: '1rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'none', border: 'none', cursor: 'pointer' }}
                     >
                         <ArrowLeft size={16} /> Back to Library
                     </button>
@@ -210,13 +229,13 @@ export default function CoursePlayer() {
                     </div>
                 </div>
                 
-                <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 0' }}>
+                <div style={{ flex: isMobile ? 'none' : 1, overflowY: isMobile ? 'visible' : 'auto', padding: '1rem 0' }}>
                     {course.videos?.map((video) => (
                         <div 
                             key={video.id} 
                             onClick={() => handleVideoSelect(video)}
                             style={{ 
-                                padding: '1rem 2rem', 
+                                padding: isMobile ? '0.8rem 1.2rem' : '1rem 2rem', 
                                 cursor: 'pointer',
                                 background: currentVideo?.id === video.id ? 'rgba(174, 129, 255, 0.1)' : 'transparent',
                                 borderLeft: `3px solid ${currentVideo?.id === video.id ? 'var(--primary-color)' : video.is_completed ? 'var(--secondary-color)' : 'transparent'}`,
@@ -236,7 +255,8 @@ export default function CoursePlayer() {
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 color: video.is_completed ? 'var(--secondary-color)' : 'var(--text-dim)',
-                                fontSize: '0.7rem'
+                                fontSize: '0.7rem',
+                                flexShrink: 0
                             }}>
                                 {video.is_completed ? <CheckCircle2 size={12} /> : video.position + 1}
                             </span>
@@ -247,9 +267,10 @@ export default function CoursePlayer() {
                                 flex: 1,
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '0.5rem'
+                                gap: '0.5rem',
+                                margin: 0
                             }}>
-                                {currentVideo?.id === video.id && <Play size={12} fill="currentColor" />}
+                                {currentVideo?.id === video.id && <Play size={12} fill="currentColor" style={{ flexShrink: 0 }} />}
                                 {video.title}
                             </p>
                         </div>
@@ -258,8 +279,24 @@ export default function CoursePlayer() {
             </div>
 
             {/* Main Content - Video Player */}
-            <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ flex: 1, background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ 
+                flex: isMobile ? 'none' : 1, 
+                position: isMobile ? 'sticky' : 'relative', 
+                top: isMobile ? 0 : 'auto',
+                display: 'flex', 
+                flexDirection: 'column',
+                width: '100%',
+                zIndex: 20
+            }}>
+                <div style={{ 
+                    width: '100%', 
+                    background: '#000', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    height: isMobile ? 'calc(100vw * 9 / 16)' : 'auto',
+                    flex: isMobile ? 'none' : 1
+                }}>
                     <div id="youtube-player" style={{ width: '100%', height: '100%' }}></div>
                     {!currentVideo && <p style={{ color: 'var(--text-dim)' }}>Select a video to start learning.</p>}
                 </div>
@@ -267,17 +304,19 @@ export default function CoursePlayer() {
                 {/* Video Info Overlay (Bottom) */}
                 {currentVideo && (
                     <div style={{ 
-                        padding: '1.5rem 3rem', 
+                        padding: isMobile ? '1rem 1.2rem' : '1.5rem 3rem', 
                         background: 'rgba(18, 18, 18, 0.9)', 
                         backdropFilter: 'blur(10px)',
                         borderTop: '1px solid var(--border-color)',
                         display: 'flex',
+                        flexDirection: isMobile ? 'column' : 'row',
+                        gap: isMobile ? '1rem' : '0px',
                         justifyContent: 'space-between',
-                        alignItems: 'center'
+                        alignItems: isMobile ? 'stretch' : 'center'
                     }}>
                         <div>
-                            <h3 style={{ fontSize: '1.1rem' }}>{currentVideo.title}</h3>
-                            <p style={{ fontSize: '0.85rem', color: 'var(--text-dim)', marginTop: '0.2rem' }}>
+                            <h3 style={{ fontSize: isMobile ? '0.95rem' : '1.1rem', margin: 0 }}>{currentVideo.title}</h3>
+                            <p style={{ fontSize: '0.85rem', color: 'var(--text-dim)', marginTop: '0.2rem', marginBottom: 0 }}>
                                 {currentVideo.is_completed ? 'Completed' : 'In Progress'}
                             </p>
                         </div>
@@ -285,7 +324,7 @@ export default function CoursePlayer() {
                             onClick={handleMarkCompleted}
                             className="btn-primary" 
                             style={{ 
-                                width: 'auto', 
+                                width: isMobile ? '100%' : 'auto', 
                                 padding: '0.6rem 1.5rem', 
                                 fontSize: '0.9rem',
                                 background: currentVideo.is_completed ? 'transparent' : 'var(--primary-gradient)',
@@ -293,7 +332,9 @@ export default function CoursePlayer() {
                                 border: currentVideo.is_completed ? '1px solid var(--secondary-color)' : 'none',
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '0.5rem'
+                                justifyContent: 'center',
+                                gap: '0.5rem',
+                                margin: 0
                             }}
                             disabled={currentVideo.is_completed}
                         >

@@ -16,7 +16,17 @@ export default function SettingsPage() {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [isMobile, setIsMobile] = useState(false);
     const router = useRouter();
+
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.matchMedia('(max-width: 768px)').matches);
+        };
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     useEffect(() => {
         const token = localStorage.getItem('access_token');
@@ -74,12 +84,17 @@ export default function SettingsPage() {
     }
 
     return (
-        <div className="container" style={{ paddingTop: '2rem', paddingBottom: '4rem' }}>
+        <div className="container" style={{ 
+            paddingTop: '1.5rem', 
+            paddingBottom: isMobile ? '100px' : '4rem',
+            paddingLeft: isMobile ? '1.2rem' : '3rem',
+            paddingRight: isMobile ? '1.2rem' : '3rem'
+        }}>
 
             <div style={{ maxWidth: '900px', margin: '0 auto' }}>
                 
                 {/* Header Section */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '3rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: isMobile ? '1.5rem' : '3rem' }}>
                     <button 
                         onClick={() => router.back()}
                         style={{ 
@@ -99,22 +114,22 @@ export default function SettingsPage() {
                         <ArrowLeft size={20} />
                     </button>
                     <div>
-                        <h1 style={{ fontSize: '2.4rem', fontWeight: 800, margin: 0 }}>
+                        <h1 style={{ fontSize: isMobile ? '1.8rem' : '2.4rem', fontWeight: 800, margin: 0 }}>
                             Account <span className="gradient-text">Settings</span>
                         </h1>
-                        <p style={{ color: 'var(--text-dim)', fontSize: '1rem' }}>Manage your personal information and preferences.</p>
+                        <p style={{ color: 'var(--text-dim)', fontSize: isMobile ? '0.9rem' : '1.05rem', margin: '0.2rem 0 0 0' }}>Manage your personal information.</p>
                     </div>
                 </div>
 
                 <div style={{ 
                     display: 'grid', 
-                    gridTemplateColumns: '300px 1fr', 
-                    gap: '2.5rem',
+                    gridTemplateColumns: isMobile ? '1fr' : '300px 1fr', 
+                    gap: isMobile ? '1.5rem' : '2.5rem',
                     alignItems: 'start'
                 }}>
                     
                     {/* Sidebar Profile Card */}
-                    <div className="category-card" style={{ padding: '2.5rem', textAlign: 'center' }}>
+                    <div className="category-card" style={{ padding: isMobile ? '1.5rem' : '2.5rem', textAlign: 'center' }}>
                         <div style={{ 
                             width: '100px', 
                             height: '100px', 
@@ -148,7 +163,7 @@ export default function SettingsPage() {
                     </div>
 
                     {/* Main Settings Form */}
-                    <div className="category-card" style={{ padding: '3rem' }}>
+                    <div className="category-card" style={{ padding: isMobile ? '1.5rem' : '3rem' }}>
                         <h2 style={{ fontSize: '1.5rem', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
                             Personal Information
                         </h2>
@@ -182,7 +197,7 @@ export default function SettingsPage() {
                         )}
 
                         <form onSubmit={handleUpdateProfile}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '1rem' : '1.5rem' }}>
                                 <div className="form-group">
                                     <label>First Name</label>
                                     <div style={{ position: 'relative' }}>

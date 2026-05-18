@@ -212,6 +212,112 @@ class CourseViewSet(viewsets.ModelViewSet):
         course.save()
         return Response(CourseSerializer(course, context={'request': request}).data)
 
+    @action(detail=True, methods=['post'])
+    def refresh(self, request, pk=None):
+        course = self.get_object()
+        try:
+            yt = YouTubeService()
+            
+            # Fetch latest metadata and videos
+            metadata = yt.get_playlist_metadata(course.playlist_id)
+            videos_data = yt.get_playlist_videos(course.playlist_id)
+            
+            # Update course metadata
+            course.thumbnail_url = metadata['thumbnail_url']
+            course.title = metadata['title']
+            course.save()
+            
+            # Synchronize videos
+            existing_videos = {v.video_id: v for v in course.videos.all()}
+            fetched_video_ids = set()
+            
+            for v_data in videos_data:
+                video_id = v_data['video_id']
+                fetched_video_ids.add(video_id)
+                
+                if video_id in existing_videos:
+                    video = existing_videos[video_id]
+                    video.title = v_data['title']
+                    video.position = v_data['position']
+                    video.duration = v_data['duration']
+                    video.save()
+                else:
+                    Video.objects.create(
+                        course=course,
+                        video_id=video_id,
+                        title=v_data['title'],
+                        position=v_data['position'],
+                        duration=v_data['duration']
+                    )
+            
+            # Delete videos that are no longer in the playlist
+            for video_id, video in existing_videos.items():
+                if video_id not in fetched_video_ids:
+                    video.delete()
+                    
+            return Response(CourseSerializer(course, context={'request': request}).data)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['post'])
+    def refresh_all(self, request):
+        courses = Course.objects.filter(user=request.user, is_archived=False)
+        errors = []
+        refreshed_count = 0
+        
+        yt = YouTubeService()
+        for course in courses:
+            try:
+                # Fetch latest metadata and videos
+                metadata = yt.get_playlist_metadata(course.playlist_id)
+                videos_data = yt.get_playlist_videos(course.playlist_id)
+                
+                # Update course metadata
+                course.thumbnail_url = metadata['thumbnail_url']
+                course.title = metadata['title']
+                course.save()
+                
+                # Synchronize videos
+                existing_videos = {v.video_id: v for v in course.videos.all()}
+                fetched_video_ids = set()
+                
+                for v_data in videos_data:
+                    video_id = v_data['video_id']
+                    fetched_video_ids.add(video_id)
+                    
+                    if video_id in existing_videos:
+                        video = existing_videos[video_id]
+                        video.title = v_data['title']
+                        video.position = v_data['position']
+                        video.duration = v_data['duration']
+                        video.save()
+                    else:
+                        Video.objects.create(
+                            course=course,
+                            video_id=video_id,
+                            title=v_data['title'],
+                            position=v_data['position'],
+                            duration=v_data['duration']
+                        )
+                
+                # Delete videos that are no longer in the playlist
+                for video_id, video in existing_videos.items():
+                    if video_id not in fetched_video_ids:
+                        video.delete()
+                        
+                refreshed_count += 1
+            except Exception as e:
+                errors.append({'course_id': course.id, 'title': course.title, 'error': str(e)})
+                
+        # Fetch updated courses list to return
+        updated_courses = Course.objects.filter(user=request.user)
+        return Response({
+            'message': f'Successfully refreshed {refreshed_count} courses.',
+            'refreshed_count': refreshed_count,
+            'errors': errors,
+            'courses': CourseSerializer(updated_courses, many=True, context={'request': request}).data
+        })
+
 class VideoProgressViewSet(viewsets.ModelViewSet):
     serializer_class = VideoProgressSerializer
 

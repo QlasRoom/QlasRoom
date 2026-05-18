@@ -69,10 +69,22 @@ function Dashboard() {
     const [newTodo, setNewTodo] = useState('');
     const [checkIns, setCheckIns] = useState([]); // List of YYYY-MM-DD strings
     const [isSyncing, setIsSyncing] = useState(false);
+    const [refreshingCourseId, setRefreshingCourseId] = useState(null);
+    const [isRefreshingAll, setIsRefreshingAll] = useState(false);
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const [isMobile, setIsMobile] = useState(false);
 
     const cacheLoadedRef = useRef(false);
+
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.matchMedia('(max-width: 768px)').matches);
+        };
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     useEffect(() => {
         const token = localStorage.getItem('access_token');
@@ -402,14 +414,61 @@ function Dashboard() {
         }
     };
 
+    const handleRefreshCourse = async (courseId) => {
+        setRefreshingCourseId(courseId);
+        setError('');
+        try {
+            const response = await api.post(`/courses/${courseId}/refresh/`);
+            const updatedCourse = response.data;
+            setAllCourses(prev => prev.map(c => c.id === courseId ? updatedCourse : c));
+            
+            const cachedAllCourses = localStorage.getItem('cached_all_courses');
+            if (cachedAllCourses) {
+                try {
+                    const parsed = JSON.parse(cachedAllCourses);
+                    const updatedCache = parsed.map(c => c.id === courseId ? updatedCourse : c);
+                    localStorage.setItem('cached_all_courses', JSON.stringify(updatedCache));
+                } catch (e) {}
+            }
+            
+            fetchRecentCourses();
+        } catch (err) {
+            setError(err.response?.data?.error || 'Failed to refresh course.');
+        } finally {
+            setRefreshingCourseId(null);
+        }
+    };
+
+    const handleRefreshAllCourses = async () => {
+        setIsRefreshingAll(true);
+        setError('');
+        try {
+            const response = await api.post('/courses/refresh_all/');
+            const { courses, errors } = response.data;
+            setAllCourses(courses);
+            
+            localStorage.setItem('cached_all_courses', JSON.stringify(courses));
+            fetchRecentCourses();
+            
+            if (errors && errors.length > 0) {
+                setError(`Refreshed some courses, but ${errors.length} failed. Check console for details.`);
+                console.error("Bulk refresh errors:", errors);
+            }
+        } catch (err) {
+            setError(err.response?.data?.error || 'Failed to refresh all courses.');
+        } finally {
+            setIsRefreshingAll(false);
+        }
+    };
+
     if (loading) return <div className="auth-container"><p>Loading your classroom...</p></div>;
 
     return (
         <div className="container" style={{ 
             paddingTop: '1.5rem',
-            paddingBottom: activeTab === 'manage' ? '1.5rem' : '4rem',
-            paddingLeft: '3rem',
-            paddingRight: '3rem',
+            paddingBottom: isMobile ? '80px' : (activeTab === 'manage' ? '1.5rem' : '4rem'),
+            paddingLeft: isMobile ? '1.2rem' : '3rem',
+            paddingRight: isMobile ? '1.2rem' : '3rem',
             display: 'flex',
             flexDirection: 'column',
             flex: 1
@@ -422,8 +481,8 @@ function Dashboard() {
 
             <div style={{ 
                 display: 'grid', 
-                gridTemplateColumns: activeTab !== 'manage' ? '1fr 260px' : '1fr', 
-                gap: '2.5rem',
+                gridTemplateColumns: (activeTab !== 'manage' && !isMobile) ? '1fr 260px' : '1fr', 
+                gap: isMobile ? '1.5rem' : '2.5rem',
                 alignItems: 'start'
             }}>
                 {/* Main Content Area */}
@@ -500,14 +559,15 @@ function Dashboard() {
                     <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
                         <BookOpen size={24} style={{ color: 'var(--primary-color)' }} /> Continue Learning
                     </h2>
-                    <div style={{ 
+                    <div className="no-scrollbar" style={{ 
                         display: 'grid', 
                         gridAutoFlow: 'column',
-                        gridAutoColumns: '450px',
+                        gridAutoColumns: isMobile ? '80vw' : '450px',
                         justifyContent: 'start',
-                        gap: '2rem',
+                        gap: isMobile ? '1rem' : '2rem',
                         overflowX: 'auto',
-                        paddingBottom: '1rem'
+                        paddingBottom: '1rem',
+                        WebkitOverflowScrolling: 'touch'
                     }}>
 
 
@@ -520,7 +580,7 @@ function Dashboard() {
                                 style={{ 
                                     padding: '1.5rem', 
                                     display: 'flex', 
-                                    gap: '1.5rem', 
+                                    gap: isMobile ? '1rem' : '1.5rem', 
                                     alignItems: 'center',
                                     background: 'rgba(255, 255, 255, 0.02)',
                                     cursor: 'pointer'
@@ -531,8 +591,8 @@ function Dashboard() {
                                     src={course.thumbnail_url} 
                                     alt={course.title} 
                                     style={{ 
-                                        width: '180px', 
-                                        height: '100px', 
+                                        width: isMobile ? '120px' : '180px', 
+                                        height: isMobile ? '68px' : '100px', 
                                         borderRadius: '12px', 
                                         objectFit: 'cover',
                                         flexShrink: 0
@@ -598,7 +658,19 @@ function Dashboard() {
 
                     {/* Category Filter Bar (Re-positioned between heading and courses) */}
                     {allCourses.length > 0 && (
-                        <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', marginBottom: '2rem', alignItems: 'center' }}>
+                        <div 
+                            className="no-scrollbar"
+                            style={{ 
+                                display: 'flex', 
+                                gap: '0.8rem', 
+                                flexWrap: isMobile ? 'nowrap' : 'wrap', 
+                                overflowX: isMobile ? 'auto' : 'visible',
+                                paddingBottom: isMobile ? '0.6rem' : '0px',
+                                marginBottom: '2rem', 
+                                alignItems: 'center',
+                                WebkitOverflowScrolling: 'touch'
+                            }}
+                        >
                             <button 
                                 onClick={() => setSelectedCategoryIdFilter('all')}
                                 style={{ 
@@ -736,8 +808,8 @@ function Dashboard() {
                     ).length > 0 ? (
                         <div style={{ 
                             display: 'grid', 
-                            gridTemplateColumns: 'repeat(auto-fill, minmax(450px, 1fr))', 
-                            gap: '2rem' 
+                            gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(450px, 1fr))', 
+                            gap: isMobile ? '1rem' : '2rem' 
                         }}>
                             {allCourses
                                 .filter(c => 
@@ -751,7 +823,7 @@ function Dashboard() {
                                         style={{ 
                                             padding: '1.5rem', 
                                             display: 'flex', 
-                                            gap: '1.5rem', 
+                                            gap: isMobile ? '1rem' : '1.5rem', 
                                             alignItems: 'center',
                                             background: 'rgba(255, 255, 255, 0.02)',
                                             cursor: 'pointer'
@@ -762,8 +834,8 @@ function Dashboard() {
                                             src={course.thumbnail_url} 
                                             alt={course.title} 
                                             style={{ 
-                                                width: '180px', 
-                                                height: '100px', 
+                                                width: isMobile ? '120px' : '180px', 
+                                                height: isMobile ? '68px' : '100px', 
                                                 borderRadius: '12px', 
                                                 objectFit: 'cover',
                                                 flexShrink: 0
@@ -884,7 +956,7 @@ function Dashboard() {
             {activeTab === 'manage' && (
                 <div style={{ 
                     display: 'grid', 
-                    gridTemplateColumns: '260px 1fr', 
+                    gridTemplateColumns: isMobile ? '1fr' : '260px 1fr', 
                     gap: '1.5rem', 
                     flex: 1, 
                     marginBottom: '0',
@@ -1004,12 +1076,40 @@ function Dashboard() {
                             </h3>
                             
                             <div style={{ display: 'flex', gap: '1rem', flex: 1, justifyContent: 'flex-end', alignItems: 'center' }}>
-                                <div style={{ fontSize: '0.9rem', color: 'var(--text-dim)', marginRight: '1rem' }}>
-                                    Showing: <span style={{ color: '#fff', fontWeight: 600 }}>
-                                        {selectedManageCategoryId === 'all' ? 'All Library' : 
-                                         selectedManageCategoryId === 'none' ? 'Uncategorized' : 
-                                         categories.find(c => c.id.toString() === selectedManageCategoryId)?.name}
-                                    </span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginRight: '1rem' }}>
+                                    <div style={{ fontSize: '0.9rem', color: 'var(--text-dim)' }}>
+                                        Showing: <span style={{ color: '#fff', fontWeight: 600 }}>
+                                            {selectedManageCategoryId === 'all' ? 'All Library' : 
+                                             selectedManageCategoryId === 'none' ? 'Uncategorized' : 
+                                             categories.find(c => c.id.toString() === selectedManageCategoryId)?.name}
+                                        </span>
+                                    </div>
+                                    <button 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleRefreshAllCourses();
+                                        }}
+                                        disabled={isRefreshingAll}
+                                        title="Refresh all courses from YouTube"
+                                        style={{ 
+                                            background: 'rgba(255,255,255,0.05)', 
+                                            border: '1px solid rgba(255,255,255,0.1)', 
+                                            borderRadius: '8px', 
+                                            color: '#fff', 
+                                            padding: '0.4rem 0.8rem', 
+                                            fontSize: '0.8rem',
+                                            fontWeight: 600,
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            gap: '0.4rem',
+                                            transition: 'all 0.2s ease',
+                                            cursor: 'pointer',
+                                            opacity: isRefreshingAll ? 0.6 : 1
+                                        }}
+                                    >
+                                        <RotateCcw size={14} className={isRefreshingAll ? 'spin' : ''} />
+                                        {isRefreshingAll ? 'Refreshing...' : 'Refresh All'}
+                                    </button>
                                 </div>
                                 <div style={{ position: 'relative', flex: 1, maxWidth: '300px' }}>
                                     <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }} />
@@ -1108,12 +1208,36 @@ function Dashboard() {
                                             <img src={course.thumbnail_url} style={{ width: '100px', height: '56px', borderRadius: '8px', objectFit: 'cover' }} />
                                             
                                             <div style={{ flex: 1, minWidth: 0 }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                                    <p style={{ fontWeight: 600, fontSize: '1rem', margin: 0 }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
+                                                    <p style={{ fontWeight: 600, fontSize: '1rem', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', flex: 1 }}>
                                                         {course.title} {course.is_archived && <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', background: 'rgba(255,255,255,0.05)', padding: '0.2rem 0.5rem', borderRadius: '4px', marginLeft: '0.5rem' }}>ARCHIVED</span>}
                                                     </p>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-dim)', fontSize: '0.8rem' }}>
-                                                        <Clock size={12} /> {formatDuration(course.total_duration)}
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexShrink: 0 }}>
+                                                        <button
+                                                            title="Refresh course from YouTube"
+                                                            style={{
+                                                                background: 'transparent',
+                                                                border: 'none',
+                                                                color: refreshingCourseId === course.id ? 'var(--primary-color)' : 'var(--text-dim)',
+                                                                cursor: 'pointer',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                padding: '0.3rem',
+                                                                borderRadius: '6px',
+                                                                transition: 'all 0.2s',
+                                                            }}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleRefreshCourse(course.id);
+                                                            }}
+                                                            disabled={refreshingCourseId === course.id}
+                                                        >
+                                                            <RotateCcw size={15} className={refreshingCourseId === course.id ? 'spin' : ''} />
+                                                        </button>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-dim)', fontSize: '0.8rem' }}>
+                                                            <Clock size={12} /> {formatDuration(course.total_duration)}
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <p style={{ fontSize: '0.85rem', color: 'var(--text-dim)', marginTop: '0.3rem' }}>
