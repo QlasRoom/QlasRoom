@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import os
+import sys
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -147,7 +148,7 @@ else:
                 ssl_require=False
             )
         }
-        print("INFO: Connected to local PostgreSQL database server.")
+        print("INFO: Connected to local PostgreSQL database server.", file=sys.stderr)
     else:
         DATABASES = {
             'default': {
@@ -156,9 +157,9 @@ else:
             }
         }
         if db_url and db_url.startswith('postgres'):
-            print("WARNING: Local PostgreSQL database server is unreachable. Gracefully falling back to SQLite database.")
+            print("WARNING: Local PostgreSQL database server is unreachable. Gracefully falling back to SQLite database.", file=sys.stderr)
         else:
-            print("INFO: Using local SQLite database.")
+            print("INFO: Using local SQLite database.", file=sys.stderr)
 
 
 # Password validation
