@@ -19,38 +19,6 @@ export default function Navbar({ onAddCourse }) {
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
-    useEffect(() => {
-        checkAuth();
-        // Listen for storage changes (for logout in other tabs)
-        window.addEventListener('storage', checkAuth);
-        // Listen for local auth changes (same tab)
-        window.addEventListener('auth-change', checkAuth);
-        
-        // Handle query params for auth
-        const authParam = searchParams.get('auth');
-        if (authParam === 'login' && !isLoggedIn) {
-            setAuthMode('login');
-            setIsAuthModalOpen(true);
-        } else if (authParam === 'signup' && !isLoggedIn) {
-            setAuthMode('signup');
-            setIsAuthModalOpen(true);
-        }
-
-        const handleClickOutside = (event) => {
-            if (profileRef.current && !profileRef.current.contains(event.target)) {
-                setIsProfileOpen(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-
-        return () => {
-            window.removeEventListener('storage', checkAuth);
-            window.removeEventListener('auth-change', checkAuth);
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [searchParams, isLoggedIn]);
-
     const checkAuth = async () => {
         const token = localStorage.getItem('access_token');
         if (token) {
@@ -67,6 +35,43 @@ export default function Navbar({ onAddCourse }) {
             setUser(null);
         }
     };
+
+    useEffect(() => {
+        // Run checkAuth inside a microtask to avoid synchronous setState calls during render
+        Promise.resolve().then(checkAuth);
+        // Listen for storage changes (for logout in other tabs)
+        window.addEventListener('storage', checkAuth);
+        // Listen for local auth changes (same tab)
+        window.addEventListener('auth-change', checkAuth);
+        
+        // Handle query params for auth
+        const authParam = searchParams.get('auth');
+        if (authParam === 'login' && !isLoggedIn) {
+            Promise.resolve().then(() => {
+                setAuthMode('login');
+                setIsAuthModalOpen(true);
+            });
+        } else if (authParam === 'signup' && !isLoggedIn) {
+            Promise.resolve().then(() => {
+                setAuthMode('signup');
+                setIsAuthModalOpen(true);
+            });
+        }
+
+        const handleClickOutside = (event) => {
+            if (profileRef.current && !profileRef.current.contains(event.target)) {
+                setIsProfileOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+
+        return () => {
+            window.removeEventListener('storage', checkAuth);
+            window.removeEventListener('auth-change', checkAuth);
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [searchParams, isLoggedIn]);
 
     const handleLogout = () => {
         localStorage.removeItem('access_token');
