@@ -27,7 +27,6 @@ export default function Navbar({ onAddCourse }) {
                 const response = await api.get('/me/');
                 setUser(response.data);
             } catch (err) {
-                console.error('Failed to fetch user:', err.response?.status, err.response?.data || err.message);
                 setIsLoggedIn(false);
             }
         } else {
