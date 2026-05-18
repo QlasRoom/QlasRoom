@@ -5,6 +5,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Plus, LogOut, Settings, BarChart3, Folder, BookOpen, GraduationCap, User, Archive, Sliders } from 'lucide-react';
 import api from '@/services/api';
+import { eraseCookie } from '@/utils/cookies';
 import AuthModal from './AuthModal';
 
 export default function Navbar({ onAddCourse }) {
@@ -70,6 +71,12 @@ export default function Navbar({ onAddCourse }) {
     const handleLogout = () => {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
+        localStorage.removeItem('cached_categories');
+        localStorage.removeItem('cached_all_courses');
+        localStorage.removeItem('cached_recent_courses');
+        localStorage.removeItem('cached_user');
+        eraseCookie('access_token');
+        eraseCookie('refresh_token');
         setIsLoggedIn(false);
         setUser(null);
         setIsProfileOpen(false);

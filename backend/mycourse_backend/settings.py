@@ -97,8 +97,39 @@ WSGI_APPLICATION = 'mycourse_backend.wsgi.application'
 
 
 # Database
-# Use PostgreSQL for production (on Render/Railway) and SQLite locally
-if dj_database_url and os.getenv('DATABASE_URL'):
+# Environment-specific configuration with automatic PostgreSQL to SQLite fallback
+import socket
+
+ENVIRONMENT = os.getenv('ENVIRONMENT', 'development').lower()
+
+def is_postgres_reachable(url_str):
+    try:
+        if not url_str or not url_str.startswith('postgres'):
+            return False
+        remaining = url_str.split('@')[-1]
+        host_port = remaining.split('/')[0]
+        if ':' in host_port:
+            host, port = host_port.split(':')
+            port = int(port)
+        else:
+            host = host_port
+            port = 5432
+        
+        # Test TCP connection with short timeout (0.5 seconds)
+        s = socket.create_connection((host, port), timeout=0.5)
+        s.close()
+        return True
+    except Exception:
+        return False
+
+if ENVIRONMENT == 'testing':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db_test.sqlite3',
+        }
+    }
+elif ENVIRONMENT == 'production' and dj_database_url and os.getenv('DATABASE_URL'):
     # Optimize for Serverless (Disable pooling)
     DATABASES = {
         'default': dj_database_url.config(
@@ -107,12 +138,27 @@ if dj_database_url and os.getenv('DATABASE_URL'):
         )
     }
 else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+    # Default to development environment
+    db_url = os.getenv('DATABASE_URL')
+    if dj_database_url and db_url and is_postgres_reachable(db_url):
+        DATABASES = {
+            'default': dj_database_url.config(
+                conn_max_age=0,
+                ssl_require=False
+            )
         }
-    }
+        print("INFO: Connected to local PostgreSQL database server.")
+    else:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
+        if db_url and db_url.startswith('postgres'):
+            print("WARNING: Local PostgreSQL database server is unreachable. Gracefully falling back to SQLite database.")
+        else:
+            print("INFO: Using local SQLite database.")
 
 
 # Password validation
@@ -168,7 +214,7 @@ REST_FRAMEWORK = {
 from datetime import timedelta
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),  # Session lasts for 1 month
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),

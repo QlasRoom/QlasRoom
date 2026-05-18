@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, LogIn, UserPlus, Github, Mail, Lock, User } from 'lucide-react';
 import api from '@/services/api';
+import { setCookie } from '@/utils/cookies';
 import { GoogleLogin } from '@react-oauth/google';
 
 export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
@@ -45,6 +46,8 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                 });
                 localStorage.setItem('access_token', response.data.access);
                 localStorage.setItem('refresh_token', response.data.refresh);
+                setCookie('access_token', response.data.access, 30);
+                setCookie('refresh_token', response.data.refresh, 30);
                 window.dispatchEvent(new CustomEvent('auth-change'));
                 onClose();
                 router.push('/dashboard');
@@ -75,6 +78,8 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
             });
             localStorage.setItem('access_token', response.data.access);
             localStorage.setItem('refresh_token', response.data.refresh);
+            setCookie('access_token', response.data.access, 30);
+            setCookie('refresh_token', response.data.refresh, 30);
             window.dispatchEvent(new CustomEvent('auth-change'));
             onClose();
             router.push('/dashboard');

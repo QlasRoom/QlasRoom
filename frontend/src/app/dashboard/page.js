@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import api from '@/services/api';
 import Sidebar from './Sidebar';
@@ -72,11 +72,52 @@ function Dashboard() {
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
+    const cacheLoadedRef = useRef(false);
+
     useEffect(() => {
         const token = localStorage.getItem('access_token');
         if (!token) {
             router.push('/?auth=login');
             return;
+        }
+
+        // Load local cache synchronously on mount to avoid page flash
+        if (!cacheLoadedRef.current) {
+            cacheLoadedRef.current = true;
+            
+            const cachedCategories = localStorage.getItem('cached_categories');
+            const cachedAllCourses = localStorage.getItem('cached_all_courses');
+            const cachedRecentCourses = localStorage.getItem('cached_recent_courses');
+            const cachedUser = localStorage.getItem('cached_user');
+            const cachedCheckIns = localStorage.getItem('cached_check_ins');
+            const cachedTodos = localStorage.getItem('cached_todos');
+
+            let hasCache = false;
+            if (cachedCategories && cachedAllCourses) {
+                try {
+                    setCategories(JSON.parse(cachedCategories));
+                    setAllCourses(JSON.parse(cachedAllCourses));
+                    hasCache = true;
+                } catch (e) {
+                    console.error('Error parsing cached library data', e);
+                }
+            }
+            if (cachedRecentCourses) {
+                try { setRecentCourses(JSON.parse(cachedRecentCourses)); } catch(e) {}
+            }
+            if (cachedUser) {
+                try { setUser(JSON.parse(cachedUser)); } catch(e) {}
+            }
+            if (cachedCheckIns) {
+                try { setCheckIns(JSON.parse(cachedCheckIns)); } catch(e) {}
+            }
+            if (cachedTodos) {
+                try { setTodos(JSON.parse(cachedTodos)); } catch(e) {}
+            }
+
+            if (hasCache) {
+                setLoading(false);
+            }
         }
 
         // Event listeners for global Navbar actions
@@ -120,13 +161,10 @@ function Dashboard() {
             const serverCheckIns = checkRes ? checkRes.data.map(c => c.date) : [];
             const serverGoals = goalsRes ? goalsRes.data : [];
 
-            const serverCheckIns = checkRes ? checkRes.data.map(c => c.date) : [];
-            const serverGoals = goalsRes ? goalsRes.data : [];
-
             setCheckIns(serverCheckIns);
             setTodos(serverGoals);
-
-            // Auto-checkin is now handled on the backend via the /me/ profile fetch
+            localStorage.setItem('cached_check_ins', JSON.stringify(serverCheckIns));
+            localStorage.setItem('cached_todos', JSON.stringify(serverGoals));
         } catch (err) {
             console.error('Critical failure in fetchAnalytics', err);
         }
@@ -136,8 +174,9 @@ function Dashboard() {
         try {
             const response = await api.get('/courses/recent/');
             setRecentCourses(response.data);
+            localStorage.setItem('cached_recent_courses', JSON.stringify(response.data));
         } catch (err) {
-            console.error('Failed to fetch recent courses');
+            console.error('Failed to fetch recent courses:', err);
         }
     };
 
@@ -145,6 +184,7 @@ function Dashboard() {
         try {
             const response = await api.get('/me/');
             setUser(response.data);
+            localStorage.setItem('cached_user', JSON.stringify(response.data));
         } catch (err) {
             console.error('Failed to fetch user');
         }
@@ -158,8 +198,11 @@ function Dashboard() {
             ]);
             setCategories(catsRes.data);
             setAllCourses(coursesRes.data);
+            localStorage.setItem('cached_categories', JSON.stringify(catsRes.data));
+            localStorage.setItem('cached_all_courses', JSON.stringify(coursesRes.data));
         } catch (err) {
-            setError('Failed to fetch library data');
+            console.error('Failed to fetch library data:', err);
+            setError(`Failed to fetch library data: ${err.response?.data?.detail || err.message}`);
         } finally {
             setLoading(false);
         }

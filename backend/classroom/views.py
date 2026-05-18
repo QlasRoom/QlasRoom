@@ -16,6 +16,26 @@ from django.contrib.auth.tokens import default_token_generator
 from django.conf import settings
 from django.utils import timezone
 
+def get_user_local_date(request):
+    if hasattr(request, 'headers'):
+        local_date_str = request.headers.get('X-User-Local-Date')
+        if local_date_str:
+            try:
+                from datetime import datetime
+                return datetime.strptime(local_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                pass
+                
+    local_date_str = request.META.get('HTTP_X_USER_LOCAL_DATE')
+    if local_date_str:
+        try:
+            from datetime import datetime
+            return datetime.strptime(local_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            pass
+            
+    return timezone.now().date()
+
 class RegisterView(APIView):
     permission_classes = (permissions.AllowAny,)
 
@@ -272,7 +292,7 @@ class GoogleLoginView(APIView):
             refresh = RefreshToken.for_user(user)
 
             # Mark attendance automatically
-            DailyCheckIn.objects.get_or_create(user=user, date=timezone.now().date())
+            DailyCheckIn.objects.get_or_create(user=user, date=get_user_local_date(request))
 
             return Response({
                 'refresh': str(refresh),
@@ -315,7 +335,7 @@ class VerifyEmailView(APIView):
 class ProfileView(APIView):
     def get(self, request):
         # Mark attendance automatically when profile is fetched (e.g. on app load/login)
-        DailyCheckIn.objects.get_or_create(user=request.user, date=timezone.now().date())
+        DailyCheckIn.objects.get_or_create(user=request.user, date=get_user_local_date(request))
         
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
