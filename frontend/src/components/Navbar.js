@@ -248,7 +248,7 @@ export default function Navbar({ onAddCourse }) {
                             </div>
 
                             {isProfileOpen && (
-                                <div className="glass-menu" style={{ 
+                                <div style={{ 
                                     position: 'absolute', 
                                     top: '50px', 
                                     right: 0, 
@@ -257,6 +257,8 @@ export default function Navbar({ onAddCourse }) {
                                     padding: '1rem',
                                     zIndex: 100,
                                     boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                                    background: '#121212',
+                                    border: '1px solid var(--border-color)',
                                 }}>
                                     <div style={{ paddingBottom: '1rem', borderBottom: '1px solid var(--border-color)', marginBottom: '1rem' }}>
                                         <p style={{ fontWeight: 600, fontSize: '0.95rem' }}>
